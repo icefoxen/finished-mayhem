@@ -1,0 +1,260 @@
+; parse.mh
+; An actual parser, eventually...
+; Again, just recursive-descent.
+;
+; Valid token symbols:
+; iftok, elsetok, eliftok, endtok, thentok, defuntok, structtok,
+; null, lbrack, lbrace, lparen, rbrack, rbrace, rparen, comma,
+; colon, period, symbol, id, string, char,
+;
+; XXX: Comments!
+
+(load "mc/lex.mh")
+
+defun getStream lexbuf:
+   defun loop accm:
+      if (not (isAtEnd lexbuf)) then
+         (loop (cons (getToken lexbuf) accm))
+      else
+         (listReverse accm)
+      end
+   end
+   (ref (loop Null))
+end
+
+defun getNext stream:
+   itm: (car (deref stream))
+   (setref stream (cdr (deref stream)))
+   itm
+end
+
+defun peekNext stream:
+   (car (deref stream))
+end
+
+defun isEmpty stream:
+   (= (deref stream) Null)
+end
+
+defun tryNextIs stream symtype:
+   next: (peekNext stream)
+   (= .next.tok symtype) 
+end
+
+defun ensureNextIs stream symtype:
+   next: (getNext stream)
+   if (= .next.tok symtype) then
+      next
+   else
+      (print "Syntax error in ensureNextIs on line ")
+      (print .next.l)
+      (print ": got ")
+      (print next)
+      (print " but expected a ")
+      (print symtype)
+      (error "")
+   end
+end
+
+
+defun pProgram stream:
+   (println "pProgram")
+   defun loop accm stream:
+   
+      (println stream)
+      if (isEmpty stream) then
+         accm
+      else
+         (loop (cons (pStatement stream) accm) stream)
+      end
+   end
+   (loop Null stream)
+end
+
+defun pStatement stream:
+   (println "pStatement")
+   if (tryNextIs stream `structtok) then
+      (pStruct stream)
+   else
+      (pExpression stream)
+   end
+end
+
+defun pStruct stream:
+   (println "pStruct")
+   (ensureNextIs stream `structtok)
+   sname: (ensureNextIs stream `id)
+   args: (pArgList stream)
+   (ensureNextIs stream `colon)
+   body: (pAssignExprList stream)
+   (ensureNextIs stream `endtok)
+   ;(buildStruct sname args body)
+end 
+
+defun pExpression stream:
+   (println "pExpression")
+   if (tryNextIs stream `defuntok) then
+      (pDefun stream)
+   elif (tryNextIs stream `lparen) then
+      (pFuncall stream)
+   elif (tryNextIs stream `period) then
+      (pStructRef stream)
+   elif (tryNextIs stream `iftok) then
+      (pIf stream)
+   elif (tryNextIs stream `funtok) then
+      (pFun stream)
+   elif (tryNextIs stream `int) then
+      (pInt stream)
+   elif (tryNextIs stream `char) then
+      (pChar stream)
+   elif (tryNextIs stream `string) then
+      (pString stream)
+   elif (tryNextIs stream `symbol) then
+      (pSymbol stream)
+   elif (tryNextIs stream `lbrace) then
+      (pArray stream)
+   elif (tryNextIs stream `null) then
+      (pNull stream)
+   elif (tryNextIs stream `id) then
+      (pIdMore stream)
+   else
+      ;(error "Syntax error in pExpression!  Make me print stuff!")
+      ; XXX: this doesn't seem QUITE right...  special cases and so on.
+      `noMatch
+   end
+end
+
+defun pExpressionList stream:
+   (println "pExpressionList")
+   defun loop accm stream:
+      e: (pExpression stream)
+      if (= e `noMatch) then
+         accm
+      else
+         (getNext stream)
+         (loop (cons e accm) stream)
+      end
+   end
+   (loop Null stream)
+end
+
+defun pArgList stream:
+   (println "pArgList")
+   defun loop accm stream:
+      if (tryNextIs stream `id) then
+         (loop (cons (ensureNextIs stream `id) accm) stream)
+      else
+         accm
+      end
+   end 
+   (loop Null stream)
+end
+
+; XXX: Placeholder
+defun pAssignExprList stream:
+   (println "pAssignExprList")
+   defun loop stream:
+      if (tryNextIs stream `endtok) then
+         `foo
+      else
+         (getNext stream)
+         (loop stream)
+      end
+   end
+   (loop stream)
+end
+
+
+defun pDefun stream:
+   (println "pDefun")
+   (ensureNextIs stream `defuntok)
+   fname: (ensureNextIs stream `id)
+   args: (pArgList stream)
+   (ensureNextIs stream `colon)
+   body: (pExpressionList stream)
+   (ensureNextIs stream `endtok)
+   ;(buildDefun fname args body)
+end
+
+defun pFuncall stream:
+   (println "pFuncall")
+   (ensureNextIs stream `lparen)
+   fname: (pExpression stream)
+   if (= fname `noMatch) then
+      (error "syntax error: pfuncall")
+   end
+   args: (pExpressionList stream)
+   (ensureNextIs stream `rparen)
+   ;(buildFuncall fname args)
+end
+
+defun pStructRef stream:
+   (println "pStructRef")
+   Null
+end
+
+; XXX: Placeholder
+defun pIf stream:
+   (println "pIf")
+   (ensureNextIs stream `iftok)
+   condition: (pExpression stream)
+   (ensureNextIs stream `colon)
+   ifbody: (pExpressionList stream)
+
+   eliflist: (ref Null)
+   elsebody: (ref Null)
+
+   if (tryNextIs `eliftok) then
+      (setref eliflist (pElifList stream))
+   end
+   if (tryNextIs stream `endtok) then
+      Null
+   elif (tryNextIs stream `elsetok) then
+      (setRef elsebody (pExpressionList stream))
+      (ensureNextIs `endtok)
+   end
+   ;(buildIf condition ifbody eliflist elsebody)
+   Null
+end
+
+defun pFun stream:
+   (println "pFun")
+   (ensureNextIs stream `funtok)
+   args: (pArgList stream)
+   (ensureNextIs stream `colon)
+   body: (pExpressionList stream)
+   (ensureNextIs stream `endtok)
+   ;(buildFun args body) 
+end
+
+defun pInt stream:
+   (println "pInt")
+   Null
+end
+
+defun pChar stream:
+   (println "pChar")
+end
+
+defun pArray stream:
+   (println "pArray")
+end
+
+defun pNull stream:
+   (ensureNextIs stream `null)
+   ;(buildNull)
+end
+
+defun pString stream:
+   (println "pString")
+end
+
+defun pSymbol stream:
+   (println "pSymbol")
+end
+
+defun pIdMore stream:
+   (println "pIdMore")
+   Null
+end
+

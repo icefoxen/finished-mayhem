@@ -1,0 +1,8 @@
+#!/bin/sh
+
+FILES="havocerr.c havocvm.c havocproc.c havocmain.c"
+
+CC=gcc
+
+$CC -c $FILES
+

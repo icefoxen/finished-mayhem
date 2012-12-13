@@ -1,0 +1,170 @@
+Okay, here's an actual definition of Mayhem for once:
+Very Basic Things:
+
+a: term
+b: term
+*Variables.  Should probably be pretty much ocamlish, bind a new scope and
+just override the old.  But the old scope might still be closed over, recall.
+
+fun ... : body end
+*Lambda!  Remember closures and tail calls!
+
+(foo ...)
+*Function call.  Nothing too special here
+
+
+match x with
+  a -> aterm,
+  b -> bterm, 
+  ...,
+  else nterm 
+end
+*Multi-way pattern matching.  It'll exist someday, honest.
+
+'a
+*Symbol
+
+[x y ...]
+*Tuple
+
+10
+*Integer
+
+
+struct foo a b:
+   x: a
+   y: (someExpr b)
+end
+a: (foo 1 2)
+.a.x
+*Structs.  Makes a function (foo a b) that initializes it.  I hate the deref
+syntax, but it works for now.
+
+defun funname ... : body end
+* Just a nice way to combine let and lambda
+
+if x then aterm [elif y then bterm]* [else cterm] end
+* This could be implemented by pattern matching, if you wanted to be
+inefficient about it
+
+
+More Advanced Things:
+
+10.0
+*Floats --not done yet.
+
+'c' 'h' 'a' 'r' 's'
+"and strings"
+
+foo:bar
+namespace foo
+*Namespaces
+Right now we treat them kinda like Lisp packages.
+Basically, they're just namespaces, names that bind to variables.
+They are not first-class objects, and thus cannot be nested or anything else.
+This could be changed, but it would add complexity, which we don't want.
+"namespace foo" changes to the namespace "foo", creating it if it doesn't
+exist.
+Beyond that...  I dunno.  There should be an "import" and maybe "use"
+statement, but...
+
+{a b c d}
+*Arrays/vectors (NOT lists!).  Manipulation is done by builtin functions
+
+in namespace
+import namespace
+load file [in namespace]
+*Namespace controls!  Look at Lisp?
+
+raise exn
+try term with exn -> term1, exn -> term2, ... end
+*Exception control, possibly implemented through continuations
+
+
+while cond do body end
+foreach x in y do body end
+from x to y [by z] do body end
+*Especially since we don't have tail-recursion yet...
+
+(foo x=a y=b ...)
+*Function calls with named values!  Tricksy and annoying, but not enough
+things do it.  Optional, default, and variable values too.
+
+x:int
+*Type annotations which may or may not be ignored
+
+
+???
+*Multiprocessing, CPS
+
+???
+*FFI!
+
+
+
+
+***Implementation notes
+*Start with a REP interpreter.
+*Maybe optimize it a bit.  Pre-treatment, etc.
+*Add a bytecode compiler and VM, doesn't have to be fancy.  Keep it
+interactive.
+*Compile bytecode to native code, still interactive and pretty much dynamic
+*???
+
+*Writing it in itself SHOULD be possible, especially once you're to the
+byte-code stage
+*A seperate runtime would be acceptable, but it'd be nicer if it wasn't
+necessary.  Remember that a compiler simply turns a term into assembly; what
+happens then is up to the linker/loader amoung other things.
+
+*Note that each function should have it's source, or at least syntax tree
+(with comments) attached to it!
+
+
+
+
+
+
+
+To do next:
+Better exceptions and such
+Continuations and CPS backend?
+
+
+Table literals
+Ugh... pattern matching across tables?  I think not.  I really just wanted a
+module system, which I have.
+
+
+Thoughts:
+Pattern matching!
+Continuations
+Packages/hashtables
+
+Docstrings!
+Functions have their syntax tree stored with them, complete with comments.
+
+
+Prototype objects a la Io?
+Or typeclasses?
+
+Ocaml ffi?
+
+To look at:
+Factor programming language
+Gambit Scheme
+
+
+PRINCIPLES:
+1 value in and out of each function
+Tuples and pattern matching are prevailant
+
+
+Real principles:
+KISS
+Case-like pattern matching
+Make each function start with a pattern match on the args, so
+you can define functions with variable args.  Like Erlang, baby.
+Don't really worry about other stuff too much, at least for now.  Solid base.
+
+Immutable values?  Scheme-ish, define vs. set!?

@@ -1,0 +1,89 @@
+; parse.mh
+; A parser.
+; I think I'm just going to do it recursive-descent-style.
+; Look up recursive-descent parsers in wikipedia for the Wirth code I
+; shamelessly base this off of.  It's... elegant.;
+;
+; Um.  Unless you want to actually build an abstract syntax tree?
+;
+; See grammar.txt
+
+; Uses: lex.mh and syntree.mh
+
+; Hahaha, evil globals!  Honestly, does this matter?  No.
+Sym: (ref Null)
+SymList: (ref Null)
+LastSym: (ref Null)
+
+defun nextSym:
+   s: (deref SymList)
+   (setref LastSym (deref Sym))
+   (setref Sym (car s))
+   (setref SymList (cdr s))
+   if (= .Sym.tok `comment) then  ; Skip comments
+      (nextSym)
+   end
+end
+
+defun getLastSym:
+   (deref LastSym)
+end
+
+defun parseError sym expectedsym:
+   (print "Syntax error on line ")
+   (println .sym.l)
+
+   (print "Expected ")
+   (print expectedsym)
+   (print " but got ")
+   (println sym)
+
+   (error "Do better next time!")
+end
+
+
+defun accept s:
+   sym: (deref Sym)
+   if (= .sym.tok s) then
+      (nextSym)
+      `true
+   else
+      `false
+   end
+end
+
+defun expect s:
+   if (accept s) then
+      `true
+   else
+      (parseError (deref Sym) s)
+   end
+end
+
+
+
+defun program:
+   Null
+end
+
+defun decl:
+   if (accept `structtok) then
+      (structdecl)
+   else
+      (expr)
+   end
+end
+
+defun structdecl:
+   (expect `symbol)
+   structname: (getLastSym)
+
+   defun loop accm:
+      if (accept `symbol) then
+         (loop (cons (getLastSym) accm))
+      else
+         accm
+   end
+   args: (loop Null)
+
+   (expect `colon)   

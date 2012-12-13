@@ -1,0 +1,31 @@
+mc is a Mayhem compiler.
+It compiles Mayhem to C.
+This means you can run it about anywhere, which is hot.
+
+I want:
+Exceptions
+Tail-call opt and iteration
+Better structure and array syntax...
+Packages
+
+docstrings ("docstring!" defun foo ...)
+operators would be NICE...
+varargs/named args
+objects (or TYPECLASSES!)
+optional types
+
+Tuples/algebraic data types
+Pattern matching
+
+
+
+
+!arr idx
+:struct var
+var <- newval ; Hmmm, assignment...  Hmmm, objects...
+
+But, nesting, dammit!
+
+
+
+Nifty dev environment that can integrate with different editors

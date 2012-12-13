@@ -1,0 +1,17 @@
+
+;GLOBAL: `foo
+
+;struct foo a b c:
+;   x: a
+;   y: b
+;   z: c
+;end
+
+;defun foo a:
+   ;if (< a 10) then
+   ;   (foo (+ a 1))
+   ;else
+   ;   a
+   ;end
+;   Null
+;end

@@ -1,0 +1,91 @@
+Compiler
+
+Exceptions --you can do these with exceptions!  Except it doesn't unwind the
+stack.  So, don't bother yet.
+Objects --might require a "send" primative to do nicely
+Or VARARGS...
+Named args would be nice too.
+
+
+Packages.
+Rational numbers would be cool.  So would floats.
+
+Better vim mode
+
+Docstrings!!
+
+Tail-call opt or loops or both
+
+MAYBE package-inspection functions; dir, inspect, etc
+
+
+
+
+How to do exceptions:
+So you have the stack.  You also have an exception stack.  These may be
+interleaved.
+On each "try...catch...end" you push an exception frame onto the exception
+stack.  The exception frame consists of the stack pointer and the instruction
+pointer of the catch block.  It may also contain the type of the exception
+being caught, but this seems... trickier, if potentially faster.
+When an exception is raised, you go to the exception stack and find the first
+exception frame.  You restore the IP and SP from it, which blows off all the
+previous stack and stuff.  You're then in the catch block, and it does a
+pattern-match to see if the exception (which is held onto somewhere) is what
+it wants.  If it isn't, it re-raises it and the process continues.
+At the bottom there's a catch-everything block that prints an error message
+and exits the program.
+Whew.
+
+Finalizers are basically the same as exception handlers, except they catch
+everything and do their stuff before re-raising the exception.
+Deconstructors (for manual memory management, ie refcounts) get trickier
+still, but finalizers can be used instead.
+
+Or... you can use continuations...  Hm.  How would that work though?
+
+
+Hokay.  Let's start writing a bytecode-compiler...
+To do that, we need a few things.
+0) Maybe fix namespaces
+*1) Arrays
+*2) Chars/strings
+3) Library
+The library must include: Bit of OCaml FFI framework, file and string IO, list
+handling, a set data structure, maybe refs using single-element arrays, list
+and array iterators, file loading... that oughta do it.
+
+Might also be nice:
+Exceptions
+Continuations?  Macros???
+
+TODO:
+-Make tables/namespaces work.  namespace, import, use, as.  Make-namespace?
+-Docstrings?
+
+
+-Type declerations
+-Make tail-call optimization work --um, maybe later.
+
+
+-Inspect, dir, disassemble...
+
+-Exceptions?  CSP threading?
+-Objects?
+-Ratios?  Complex numbers?
+-Function calls with named values and defaults?  Or at least varargs?
+
+-With macros and continuations, you could probably write objects, exceptions
+and CSP...
+
+
+
+Runtime (speculative)
+Built-in database?
+Or simply a set of packages/images that are serialized to disk...
+Versioning, system-building...
+
+Ideally, the language should be its own text editor, command line, scripting
+language, and so on.
+
+

@@ -1,0 +1,27 @@
+; syntree.mh
+; Syntax tree!  Yay!
+
+; types: `int, `symbol, `var, `array, `tuple, `char, `string, `struct,
+; `func, `null, `undefined
+struct sval v t:
+   val = v
+   type = t
+end
+
+struct slet
+end
+
+struct sapply
+end
+
+struct slambda
+end
+
+struct sif
+end
+
+struct sstructdecl
+end
+
+struct sstructref
+end

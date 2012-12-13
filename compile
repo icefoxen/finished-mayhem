@@ -1,0 +1,16 @@
+#!/bin/sh
+
+
+FILES="backend.ml parse.mli parse.ml lex.ml stdlib.ml frontend.ml"
+
+OCAMLYACC=ocamlyacc
+OCAMLLEX=ocamllex
+OCAMLC=ocamlc
+OCAMLOPT=ocamlopt
+
+$OCAMLYACC -v *.mly
+$OCAMLLEX *.mll
+
+#$OCAMLC -c -g $FILES
+$OCAMLOPT -c $FILES
+

@@ -1,0 +1,373 @@
+(println "Loading Mayhem library 0.1...  ")
+
+; Misc. functions
+
+defun +1 i: 
+   (+ i 1) 
+end
+
+;defun -1 i: 
+;   (- i 1) 
+;end
+
+defun shl x n:
+   (* x (** 2 n))
+end
+
+defun shr x n:
+   (/ x (** 2 n))
+end
+
+defun error x:
+   (println x)
+   (exit 1)
+end
+
+struct pair a b:
+   fst: a
+   snd: b
+end
+
+defun fst x:
+   .x.fst
+end
+
+defun snd x:
+   .x.snd
+end
+
+defun fold seq fn startval:
+   defun loop currentIdx accm:
+      if (= currentIdx (length seq)) then
+         accm
+      else
+         (loop (+1 currentIdx) (fn (get seq currentIdx) accm))
+      end
+   end
+
+   (loop 0 startval)
+end
+
+
+; List functions
+
+
+defun cons head tl:
+   (pair head tl)
+end
+
+defun car x:
+   (fst x)
+end
+
+defun cdr x:
+   (snd x)
+end
+
+defun listLength x: 
+   defun loop lst accm:
+      if (= lst Null) then accm
+      else (loop (cdr lst) (+1 accm))
+      end
+   end
+   (loop x 0)
+end
+
+defun listNth x i:
+   if (= i 0) then
+      (car x)
+   else
+      (listNth (cdr x) (- i 1))
+   end
+end
+
+defun listIndex lst itm:
+   defun loop lst accm:
+      if (= lst Null) then
+         (error "listIndex: item not found")
+      elif (= (car lst) itm) then
+         accm
+      else
+         (loop (cdr lst) (+1 accm))
+      end
+   end
+   (loop lst 0)
+end
+
+
+; Not tail-recursive
+defun listCopy lst:
+   if (= lst Null) then 
+      Null
+   else
+      (cons (car lst) (listCopy (cdr lst)))
+   end
+end
+
+
+defun listReverse lst:
+   defun loop lst accm:
+      if (= lst Null) then
+         accm
+      else
+         (loop (cdr lst) (cons (car lst) accm)) 
+      end
+   end
+   (loop lst Null)
+end
+
+defun listIter lst f:
+   if (= lst Null) then
+      Null
+   else
+      (f (car lst))
+      (listIter (cdr lst) f)
+   end
+end
+
+defun listMap lst f:
+   defun loop lst accm:
+      if (= lst Null) then
+         accm
+      else
+         (loop (cdr lst) (f (car lst)))
+      end
+   end
+   (loop lst Null)
+end
+
+defun listIter2 lst f:
+   if (= lst Null) then
+      Null
+   else
+      (f (fst (car lst)) (snd (car lst)))
+      (listIter (cdr lst) f)
+   end
+end
+
+defun listFold lst f i:
+   if (= lst Null) then
+      i
+   else
+      (listFold (cdr lst) f (f (car lst) i))
+   end
+end
+   
+
+; Additional array funcs
+
+;defun list2array lst:
+;   arr: (array (listLength lst))
+;   defun loop accm counter:
+;      if (= accm []) then
+;         arr
+;      else
+;         (set arr counter (car accm))
+;         (loop (cdr accm) (+1 counter))
+;      end
+;   end
+;   (loop lst 0)
+;end
+
+;defun array2list arr:
+;   Null
+;end
+
+
+; Stack functions
+
+defun makeStack:
+   (ref Null)
+end
+
+defun stackLength stk:
+   (listLength (deref stk))
+end
+
+defun push stk itm:
+   (setref stk (cons itm (deref stk)))
+end
+
+defun pop stk:
+   itm: (car (deref stk))
+   (setref stk (cdr (deref stk)))
+   itm
+end
+
+defun stackLength x:
+   (listLength (deref x))
+end
+
+testList: (cons `c (cons `b (cons `a [])))
+
+; Assoc list functions
+
+defun build assoclist key itm:
+   (cons (pair key itm) assoclist)
+end
+
+; Why the hell is this broken?
+;defun assoc lst key:
+   ;(println "***Assoc entered")
+   ;(println key)
+   ;(println lst)
+;   match lst with
+;      [[key vl] rest] -> ;(println "***Thing matched...") vl,
+;			 vl,
+;      [somethingelse stuff] -> ; (println "***Stuff!") ; (println stuff) 
+;                               (assoc stuff key),
+;      [] -> ['error "Not found"],
+;      a -> (println "Oh snap!") (println a)
+;   end
+;end
+
+defun assoc lst key:
+   itm: (car lst)
+;   (println itm)
+   if (= key (fst itm)) then
+      (snd itm)
+   elif (= (cdr lst) Null) then
+      Null
+   else
+      (assoc (cdr lst) key)
+   end
+end
+
+
+; Tree/skiplist/set functions (?)
+; A hashtable would be good.
+
+; Functions: add, remove, map, iter, size, keys, values, create, empty,
+; empty?, copy, exists, find, replace, fold
+
+; Simple binary tree.
+; Better'n nothing.
+struct bintree ky itm l r:
+   key: ky
+   val: itm
+   left: l
+   right: r
+end
+
+defun treeNew key val:
+   (bintree key val Null Null)
+end
+
+defun treeAdd tree key val:
+   if (= tree Null) then
+      (treeNew key val)
+   elif (> .tree.key key) then
+      (bintree .tree.key .tree.val 
+        (treeAdd .tree.left key val) .tree.right)
+   elif (< .tree.key key) then
+      (bintree .tree.key .tree.val 
+        .tree.left (treeAdd .tree.right key val))
+   else
+      tree
+   end
+end
+
+defun treeGet tree key:
+   if (= tree Null) then
+      Null
+   elif (= .tree.key key) then
+      .tree.val
+   elif (> .tree.key key) then
+      (treeGet .tree.left key)
+   else
+      (treeGet .tree.right key)
+   end
+end
+
+;defun assoc2tree assoc:
+   
+
+
+
+
+; Iterators and other sequence stuff
+
+; Local vars DO work, right?  It seems so...
+defun iter f seq:
+   defun loop i:
+      if (= i (length seq)) then
+         Null
+      else
+         (f (get seq i))
+         (loop (+1 i))
+      end
+   end
+   (loop 0)
+end
+
+defun iteri f seq:
+   defun loop i:
+      if (= i (length seq)) then
+         Null
+      else
+         (f i (get seq i))
+         (loop (+1 i))
+      end
+   end
+   (loop 0)
+end
+
+defun index seq itm:
+   len: (length seq)
+   defun loop i:
+      if (= i len) then 
+         (error "index: item not found")
+      elif (= itm (get seq i)) then
+         i
+      else
+         (loop (+1 i))
+      end
+   end
+   (loop 0)
+end 
+
+
+defun doTimes f i:
+   defun loop idx:
+      if (= (- i 1) idx) then
+         (f idx)
+      else
+         (f idx)
+         (loop (+1 idx))
+      end
+   end
+   (loop 0)
+end
+
+
+; Refs
+; We use one-element arrays for references.  It works pretty well, actually.
+; And lets us keep our immutable variables.
+
+defun ref x:
+   {x}
+end
+
+defun deref x:
+   (get x 0)
+end
+
+defun setref ref val:
+   (set ref 0 val)
+end
+
+
+defun incref r:
+   (setref r (+1 (deref r)))
+end
+
+defun decref r:
+   (setref r (- (deref r) 1))
+end
+
+
+
+;(load "objlib.mh")
+
+(println "Done!")
+

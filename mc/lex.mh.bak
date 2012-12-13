@@ -1,0 +1,159 @@
+; lex.mh
+; The Mayhem lexer.
+; This is gonna be an interesting smoke-test...
+;
+; I think I am simply going to take a string, and tokenize it onto a list
+; or something nice and simple like that.
+
+
+; Handy funcs
+
+defun str2int str:
+   Null
+end
+
+defun str2float str:
+   Null
+end
+
+defun str2ratio str:
+   Null
+end
+
+struct lexbuf s:
+   str: s
+   idx: (ref 0)
+   tokens: (ref Null)
+   lineno: (ref 0)
+end
+
+defun getCurrentChar lexbuf:
+   (get .lexbuf.str .lexbuf.idx)
+end
+
+defun isLexbufEnded lexbuf:
+   (= (deref .lexbuf.idx) (len .lexbuf.str))
+end
+
+defun newLine lb:
+   (ref+1 .lb.lineno)
+end
+
+defun newChar lb:
+   (ref+1 .lb.idx)
+end
+
+defun incChar lb x:
+   (setref .lb.idx (+ (deref .lb.idx) x))
+end
+
+
+
+; TOKENIZING
+
+; Okay, maybe "*lexbuf.idx += *lexbuf.idx" IS more concise...
+; But not as fun!
+
+
+; Gotta be a better way.
+; Certain things have to be separated by whitespace
+; Anything multi-character, for instance.
+; Other things, like punctuation, doesn't.
+
+
+defun 
+
+; A short-circuit "or" would make this more efficient, but...
+defun charMatches char array:
+   defun charMatch chr cond:
+      (or (= char chr) cond)
+   end
+   (fold array charMatch false)
+end
+
+struct token t lineno charno:
+   tok: t
+   l: lineno
+   c: charno
+end
+
+defun makeToken t:
+   (token t (deref currentLine) (deref currentChar))
+end
+
+; This divvies a lexbuf into a list of tokens.
+; Tokens are only separated, NOT actually recognized.
+defun divvy lexbuf:
+   accm: (ref Null)
+   tokenChars: {'(' ')' '[' ']' '{' '}' ':' '.' }
+   defun getToken str startidx currentidx:
+      if (= currentidx (length str))
+         Null
+      else
+         c: (get str currentidx)
+         if (charMatches c tokenChars) then
+            (setref accm (cons (slice str startidx currentidx) (deref accm)))
+            (getToken str currentidx (+1 currentidx))
+         elif (= c ' ') then (getToken str currentidx (+1 currentidx))
+         elif (= c ';') then  ; Comment
+            Null
+         elif (= c '/') then  ; /- comment -/
+            Null
+
+
+defun getWord
+            
+
+
+defun getToken lexbuf: 
+   char: (getCurrentChar lexbuf)
+   
+   if (= char '[') then
+      (makeToken 'lbrack)
+   elif (= char ']') then
+      (makeToken 'rbrack)
+   elif (= char '(') then
+      (makeToken 'lparen)
+   elif (= char ')') then
+      (makeToken 'rparen)
+   elif (= char '{') then
+      (makeToken 'lbrace)
+   elif (= char '}') then
+      (makeToken 'rbrace)
+   elif (= char ',') then
+      (makeToken 'comma)
+   elif (= char ':') then
+      (makeToken 'colon)
+   elif (= char '.') then
+      (makeToken 'period)
+   elif (= char ' ') then
+      (getToken lexbuf)      
+
+   elif (= char 'f') then ; fun
+      Null
+   elif (= char 'd') then ; defun
+      Null
+   elif (= char 'l') then ; let
+      Null
+
+   elif (= char 'i') then ; in
+      Null
+   elif (= char 'e') then ; end, elif
+      Null
+   elif (= char '') then
+      Null
+   elif (= char ']') then
+      Null
+   elif (= char ']') then
+      Null
+   elif (= char ']') then
+      Null
+
+   elif (= char ']') then
+      Null
+   elif (= char ']') then
+      Null
+   elif (= char ']') then
+      Null
+   end
+end

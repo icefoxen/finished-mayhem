@@ -1,0 +1,68 @@
+# Define SciTE settings for Mayhem files.
+
+filter.mayhem=Mayhem (mh)|*.mh|
+
+file.patterns.mayhem=*.mh
+
+lexer.$(file.patterns.mayhem)=mayhem
+
+indent.size.$(file.patterns.mayhem)=3
+use.tabs.$(file.patterns.mayhem)=0
+
+# Keyword except of operator keywords
+keywordclass.mayhem.main=defun fun struct end \
+if then else elif while foreach from load
+# Keywords for operators
+keywordclass.mayhem.operators= + - / * ** mod \
+get set ref deref setref \
+and or not xor : = < > <= >= /= 
+
+keywordclass.mayhem=$(keywordclass.mayhem.main) $(keywordclass.mayhem.operators)
+
+keywords.$(file.patterns.mayhem)=$(keywordclass.mayhem)
+
+# mayhem styles
+# Default
+#style.mayhem.0=fore:#808080
+style.mayhem.0=fore:#FF0000
+# Keyword
+style.mayhem.1=$(colour.keyword),bold
+# Identifiers
+style.mayhem.2=
+# Number
+style.mayhem.3=$(colour.number)
+# Operators (delimiters)
+style.mayhem.4=$(colour.operator),bold
+# Character
+style.mayhem.5=$(colour.char)
+# End of line where character is not closed
+style.mayhem.6=fore:#000000,$(font.monospace),back:#E0C0E0,eolfilled
+# String
+style.mayhem.7=$(colour.string)
+# End of line where string is not closed
+style.mayhem.8=fore:#000000,$(font.monospace),back:#E0C0E0,eolfilled
+# Label
+style.mayhem.9=fore:#7F0000
+# Comment
+style.mayhem.10=$(colour.code.comment.line),$(font.code.comment.line)
+# Illegal token
+style.mayhem.11=fore:#FF0000
+
+# Comments
+comment.block.mayhem=;
+
+#braces.mayhem.style=4
+
+statement.indent.$(file.patterns.mayhem)=5 begin declare else elsif exception for if is loop while
+statement.end.$(file.patterns.mayhem)=10 ;
+statement.lookback.$(file.patterns.mayhem)=20
+block.start.$(file.patterns.mayhem)=10 then is
+block.end.$(file.patterns.mayhem)=10 end
+
+calltip.mayhem.word.characters=._$(chars.alpha)
+
+
+
+#command.compile.*.mh=$(mayhemgcc)
+#command.build.*.mh=gnatmake
+command.go.*.mh=mayhem $(FileNameExt)

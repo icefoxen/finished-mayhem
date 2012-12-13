@@ -1,0 +1,26 @@
+; mc.mh
+; Main driver file and such
+
+(load "mc/parse.mh")
+
+defun compileFile filename:
+   f: (open `read filename)
+   lb: (lexbuf (f `read))
+   (f `close)
+
+   s: (getStream lb)
+   syntree: (pProgram s)
+end
+
+
+; For debugging
+defun readStream filename:
+   f: (open `read filename)
+   lb: (lexbuf (f `read))
+   (f `close)
+
+   (getStream lb)
+end
+
+
+(compileFile "test.mh")

@@ -1,0 +1,79 @@
+; parse.mh
+; A parser.
+; I think I'm just going to do it recursive-descent-style.
+; ...This Wirth code seems...  untrustworthy, inconvenient, and non-functional
+;in style.
+; See grammar.txt
+
+; Uses: lex.mh and syntree.mh
+
+; A global current-symbol and symbol-list might be a good idea anyway...
+
+
+defun getSym symlist:
+   (car symlist)
+end
+
+defun isSym desiredsym symlist:
+   (= desiredsym .(getSym symlist).tok)
+end
+
+defun isCurrentSym desiredsym symlist:
+   (= desiredsym (getSym symlist)
+end
+
+defun nextSym symlist:
+   s: (cdr symlist)
+   if (isSym `comment s) then  ; Skip comments
+      (nextSym s)
+   end
+   s
+end
+
+defun pError expectedsym symlist:
+   sym: (car symlist)
+   (print "Syntax error on line ")
+   (println .sym.l)
+
+   (print "Expected ")
+   (print expectedsym)
+   (print " but got ")
+   (println .sym.tok)
+
+   (error "Do better next time!")
+end
+
+; Beware of namespace clashes!
+defun pValue symlst:
+   s: (getSym symlst)
+   v: (getTokenVal s)
+   if (isSym `int s) then
+      (sval v  `int)
+   elif (isSym `char s) then
+      (sval v `char)
+   elif (isSym `string s) then
+      (sval v `string)
+   elif (isSym `symbol s) then
+      (pSymbol (nextSym symlst))
+   elif (isSym `lbrack s) then
+      (pArray (nextSym symlst))
+   
+   end
+end
+
+defun pSymbol symlst: 
+   s: (getSym symlst)
+   if (isSym `id s) then
+      (sval (getTokenVal s) `symbol)
+   else
+      (error `id symlst)
+   end
+end
+
+defun pArray symlst:
+   defun loop symlst accm:
+      s: (getSym symlst)
+      if (isSym `rbrack s) then
+         accm
+      else
+         (loop (nextSym symlst) (cons s 

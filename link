@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# This is a rather sucky way of doing this, but oh well.
+# I hate build systems.
+FILES="lex.cmo parse.cmo backend.cmo stdlib.cmo frontend.cmo"
+
+OPTFILES="lex.cmx parse.cmx backend.cmx stdlib.cmx frontend.cmx"
+
+LIBS="str.cma"
+OPTLIBS="str.cmxa"
+
+OCAMLLINK=ocamlc
+OCAMLOPTLINK=ocamlopt
+TARGET=mayhem
+
+#$OCAMLLINK -g -o $TARGET $LIBS $FILES
+$OCAMLOPTLINK -o $TARGET $OPTLIBS $OPTFILES

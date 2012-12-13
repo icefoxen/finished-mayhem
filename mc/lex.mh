@@ -1,0 +1,360 @@
+; lex.mh
+; The Mayhem lexer.
+; This is gonna be an interesting smoke-test...
+;
+; I think I am simply going to take a string, and tokenize it onto a list
+; or something nice and simple like that.
+
+TESTSTR: "
+defun getUntilWhitespace lb:
+   defun loop i: 
+      if (= i (length .lb.str)) then
+         i
+      else
+         c: (get .lb.str i)
+         if (or (= c ' ') (= c '\t')) then
+            i
+         elif (= c '\n') then
+            (newLine lb)
+            i
+         else
+            (loop (+1 i))
+         end
+      end
+   end
+   (loop .lb.idx) 
+end
+"
+
+;tokenspec: {(pair '[' 'lbrack) (pair ']' 'rbrack)}
+
+
+; Handy funcs
+
+defun str2number s: 
+   (str2int s)
+end
+
+;defun str2float str:
+;   Null
+;end
+
+;defun str2ratio str:
+;   Null
+;end
+
+struct lexbuf s:
+   str: s
+   idx: (ref 0)
+   lineno: (ref 1)
+end
+
+defun isAtEnd lexbuf:
+   (= (deref .lexbuf.idx) (- (length .lexbuf.str) 1))
+end
+
+defun getCurrentChar lexbuf:
+   (get .lexbuf.str (deref .lexbuf.idx))
+end
+
+defun getNextChar lexbuf:
+   (get .lexbuf.str (+ 1 (deref .lexbuf.idx)))
+end
+
+defun getPrevChar lexbuf:
+   (get .lexbuf.str (- 1 (deref .lexbuf.idx)))
+end
+
+defun isLexbufEnded lexbuf:
+   (= (deref .lexbuf.idx) (length .lexbuf.str))
+end
+
+defun newLine lb:
+   (incref .lb.lineno)
+end
+
+defun nextChar lb:
+   (incref .lb.idx)
+end
+
+defun prevChar lb:
+   (decref .lb.idx)
+end
+
+defun incChar lb x:
+   (setref .lb.idx (+ (deref .lb.idx) x))
+end
+
+
+defun setChar lb i:
+   (setref .lb.idx i)
+end
+
+; TOKENIZING
+
+
+struct token t lineno charno:
+   tok: t
+   l: lineno
+   c: charno
+   val: (ref Null)
+end
+
+; Always use this instead building tokens manually!
+; That way the line and char numbers get set right.
+defun makeToken t lb:
+   (token t (deref .lb.lineno) (deref .lb.idx))
+end
+
+defun setTokenVal t v:
+   (setref .t.val v)
+end
+
+defun getTokenVal t:
+   (deref .t.val)
+end
+
+defun isNumber chr:
+   (or (= chr '0') (or (= chr '1') (or (= chr '2') (or (= chr '3')
+       (or (= chr '4') (or (= chr '5') (or (= chr '6') (or (= chr '7')
+       (or (= chr '8') (= chr '9'))))))))))
+end
+
+
+;; ACTUAL LEXING
+
+; And, there's gotta be a way to separate the actual token spec
+; from the if/else junk, but the result is so dependant on what
+; the string of the token actually is...
+; Oh well.  Brute force works too.
+
+; XXX: Negative numbers and invalid id's!
+defun str2token str lb:
+   if (= str "if") then
+      (makeToken `iftok lb)
+   elif (= str "else") then
+      (makeToken `elsetok lb)
+   elif (= str "elif") then
+      (makeToken `eliftok lb)
+   elif (= str "end") then
+      (makeToken `endtok lb)
+   elif (= str "then") then
+      (makeToken `thentok lb)
+   elif (= str "defun") then
+      (makeToken `defuntok lb)
+   elif (= str "struct") then
+      (makeToken `structtok lb)
+   elif (= str "Null") then
+      (makeToken `null lb)
+   else 
+      firstchar: (get str 0)
+      if (isNumber firstchar) then
+         t: (makeToken `int lb)
+         (setTokenVal t (str2number str))
+         t
+      else
+         t: (makeToken `id lb)
+         (setTokenVal t str)
+         t
+      end
+   end
+end
+
+
+defun getNextToken lb:
+   defun loop i: 
+      if (= i (length .lb.str)) then
+         i
+      else
+         c: (get .lb.str i)
+         if (or (= c ' ') (= c '\t')) then
+            i
+
+         elif (= c '[') then
+            i
+         elif (= c ']') then
+            i
+         elif (= c '(') then
+            i
+         elif (= c ')') then
+            i
+         elif (= c '{') then
+            i
+         elif (= c '}') then
+            i
+         elif (= c ',') then
+            i
+         elif (= c ':') then
+            i
+         elif (= c '.') then
+            i
+         elif (= c '\'') then
+            i
+
+         elif (= c '\n') then
+         ;   (newLine lb)
+            i
+         else
+            (loop (+1 i))
+         end
+      end
+   end
+   (loop (deref .lb.idx))
+end
+
+; XXX: Numeric char codes!
+defun escapify lexbuf:
+   c: (getNextChar lexbuf)
+   (nextChar lexbuf)
+   if (= c 'n') then
+      '\n'
+   elif (= c 't') then
+      '\t'
+   elif (= c 'r') then
+      '\r'
+   elif (= c 'b') then
+      '\b'
+   elif (= c '\'') then
+      '\''
+   elif (= c '\\') then
+      '\\'
+   else
+      (print "Invalid char code: \\")
+      (println c)
+      (error "")
+   end
+end
+
+defun parseQuote lexbuf:
+   c: (getCurrentChar lexbuf)
+   t: (makeToken `char lexbuf)
+   if (= c '\\') then
+      (setTokenVal t (escapify lexbuf))
+   else
+      (setTokenVal t c)
+   end
+   if (/= '\'' (getNextChar lexbuf)) then
+      (error "Blargity!  Close your character quotes!")
+   end
+   (nextChar lexbuf)
+   (nextChar lexbuf)
+   t
+end
+
+; XXX: Escape codes
+defun parseString lexbuf:
+   strStart: (deref .lexbuf.idx)
+   lastChar: (ref (getCurrentChar lexbuf))
+   defun findEndQuote:
+      (nextChar lexbuf)
+      c: (getCurrentChar lexbuf)
+      if (and (/= (deref lastChar) '\\')  (= c '"')) then ;"
+         (nextChar lexbuf)
+         (slice .lexbuf.str strStart (deref .lexbuf.idx))
+      else
+         if (= c '\n') then
+            (newLine lexbuf)
+         end
+         (setref lastChar c)
+         (findEndQuote)
+      end
+   end
+   (findEndQuote)
+end
+
+defun parseComment lexbuf:
+   if (= '\n' (getCurrentChar lexbuf)) then
+      (makeToken `comment lexbuf)
+   else
+      (nextChar lexbuf)
+      (parseComment lexbuf)
+   end
+end
+
+defun getToken lexbuf: 
+   char: (getCurrentChar lexbuf)
+   (nextChar lexbuf)
+   if (= char '[') then
+      (makeToken `lbrack lexbuf)
+   elif (= char ']') then
+      (makeToken `rbrack lexbuf)
+   elif (= char '(') then
+      (makeToken `lparen lexbuf)
+   elif (= char ')') then
+      (makeToken `rparen lexbuf)
+   elif (= char '{') then ; }
+      (makeToken `lbrace lexbuf)
+   elif (= char '}') then
+      (makeToken `rbrace lexbuf)
+   elif (= char ',') then
+      (makeToken `comma lexbuf )
+   elif (= char ':') then
+      (makeToken `colon lexbuf)
+   elif (= char '.') then
+      (makeToken `period lexbuf)
+   elif (= char ';') then
+      (parseComment lexbuf)
+      (getToken lexbuf)
+   elif (= char '\'') then
+      (parseQuote lexbuf)
+   elif (= char ' ') then
+      (getToken lexbuf)      
+   elif (= char '\t') then
+      (getToken lexbuf)      
+   elif (= char '\n') then
+      (newLine lexbuf)
+      (getToken lexbuf)      
+
+   elif (= char '"') then ;"
+      t: (makeToken `string lexbuf)
+      (setTokenVal t (parseString lexbuf))
+      t
+
+   elif (= char '`') then
+      endidx: (getNextToken lexbuf)
+      tokstr: (slice .lexbuf.str (deref .lexbuf.idx) endidx)
+      (setChar lexbuf endidx)
+      t: (makeToken `symbol lexbuf)
+      (setTokenVal t (getNextToken lexbuf))
+      t
+   else
+      (prevChar lexbuf)
+      endidx: (getNextToken lexbuf)
+      tokstr: (slice .lexbuf.str (deref .lexbuf.idx) endidx)
+      (setChar lexbuf endidx)
+      (str2token tokstr lexbuf) 
+   end
+end
+
+
+defun lexFile filename:
+   f: (open `read filename)
+   lb: (lexbuf (f `read))
+   (f `close)
+
+   defun loop accm:
+      if (not (isAtEnd lb)) then
+         (loop (cons (getToken lb) accm))
+      else
+         (listReverse accm)
+      end
+   end
+
+   (loop Null)
+end
+
+
+
+
+; Test the thing!  On itself.  :-)
+
+;f: (open `read "mc/lex.mh")
+;lb: (lexbuf (f `read))
+;(f `close)
+
+;defun doStuff:
+;   if (not (isAtEnd lb)) then 
+;      (println (getToken lb))
+;      (doStuff) 
+;   end
+;end

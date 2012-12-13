@@ -1,0 +1,135 @@
+; objlib.mh
+; A simple prototype-based object system.
+; Because I can.
+;
+; Okay, an object is a structure with a bunch of slots,
+; and a pointer to it's parent. 
+
+(println "Loading objlib...")
+
+
+struct object p:
+   parent: p
+   slots: (ref Null)
+end
+
+
+; Um, a tree is of limited usefulness when it can only use numbers
+; as keys...
+;defun addSlot obj name itm:
+;   (setref .obj.slots (treeAdd .obj.slots name itm))
+;end
+
+defun addSlot obj name itm:
+   (setref .obj.slots (build (deref .obj.slots) name itm))
+end
+
+defun getSlot obj name:
+   if (= (deref .obj.slots) Null) then
+      Null
+   else
+      (assoc (deref .obj.slots) name)
+   end
+end
+
+; A method is just a function that takes the object as the first
+; arg.
+; Erm.
+; Are we doing (send 'msg obj args)?
+; Or are we doing (func obj args)?
+; The latter requires no varargs.
+; But, it does require that the function know what type of object its
+; working on, and adjust accordingly.
+; Unless (func a b) is just ((getSlot a funcname) b), which would be...
+; interesting.
+; We'd need varargs for that then, because (func) could have different
+; numbers of args.
+; Blah.  No easy way to do it, ya know.  Syntax.
+; Or, make varargs.
+defun getSlotWithInheritance obj slotname:
+   if (= obj Null) then
+      `error
+   else
+      method: (getSlot obj slotname)
+      ;(print "Method is: ")
+      ;(println method)
+      if (= method Null) then
+         (getSlotWithInheritance .obj.parent slotname)
+      else
+         method
+      end
+   end
+end
+
+
+
+
+defun send obj msg args:
+   method: (getSlotWithInheritance obj msg)
+   if (= method `error) then
+      `error
+   else
+      (method obj args)
+   end
+end
+      
+
+defun cloneMethod self args:
+   (object self)
+end
+
+
+defun addSlotMethod self args:
+   key: (get args 0)
+   val: (get args 1)
+   (addSlot self key val)
+end
+
+
+defun getSlotMethod self args:
+   key: (get args 0)
+   (getSlotWithInheritance self key)
+end
+
+
+Obj: (object Null)
+(addSlot Obj `clone cloneMethod)
+(addSlot Obj `get getSlotMethod)
+(addSlot Obj `set addSlotMethod)
+
+; Erm.  This doesn't work.
+b: (send Obj `clone {})
+   
+
+
+
+; First, we need some basic methods.
+;defun clone slots arg:
+;   newslots: (ref (listCopy (deref slots)))
+;   fun message arg:
+;      method: (assoc newslots message)
+;      (method slots arg)
+;   end
+;   newslots
+;end
+
+;defun addSlot slots arg:
+;   name: (fst arg)
+;   value: (snd arg)
+;   (setref slots (build (deref slots) name value))
+;end
+
+;defun getSlots slots arg:
+;   (deref slots)
+;end
+
+;defun getSlot slots arg:
+;   (assoc (deref slots) arg)
+;end
+
+;foo1: {(cons (cons 'getSlots getSlots) 
+;	(cons (cons 'get getSlot)
+;	 (cons (cons 'add addSlot)
+;          (cons (cons 'clone clone) Null))))}
+;foo2: (deref foo1)
+

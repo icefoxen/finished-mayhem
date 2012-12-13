@@ -1,0 +1,105 @@
+Grammar for mayhem:
+Just so you remember, [] is possible-omitted, {} is possibly ommited or
+repeated.
+Lowercase stuff is nonterminals, UPPERCASE are terminals.
+
+program = {decl}
+
+decl = expr
+     | structdecl
+
+structdecl = STRUCT SYMBOL {arg} COLON {letexpr} END
+
+; May eventually become other things, ie varargs.
+arg = SYMBOL
+
+expr = value
+     | letexpr
+     | defunexpr
+     | applyexpr
+     | lambdaexpr
+     | ifexpr
+
+value = INT
+      | CHAR
+      | STRING
+      | BACKQUOTE SYMBOL
+      | LBRACK {expr} RBRACK
+      | NULL
+      | varexpr
+      | structref
+
+; May eventually become other things, ie namespaces (array indices?)
+varexpr = SYMBOL
+
+applyexpr = LPAREN expr {expr} RPAREN
+
+letexpr = varexpr COLON expr
+
+defunexpr = DEFUN varexpr {arg} COLON {expr} END
+
+lambdaexpr = FUN {arg} COLON {expr} END
+
+ifexpr = IF expr THEN {expr} {ELIF expr THEN {expr}} [ELSE {expr}] END
+
+structref = PERIOD expr PERIOD SYMBOL
+
+
+
+
+Once the language is more finished, it should look something like this, and
+have:
+Objects, exceptions, varargs, docstrings, packages, typedecls
+Once it's got this stuff, I'll consider it pretty good.
+Not yet done 'cause I dunno how yet: Assignment, struct/array indices,
+operators, optional types, tuples/pattern matching, typeclasses
+
+program = {decl}
+
+decl = expr
+     | structdecl
+*     | typedecl
+*     | objdecl
+*     | importdecl
+
+structdecl = STRUCT SYMBOL {arg} COLON {letexpr} END
+
+*typedecl = TYPE ... COLON ...
+
+*importdecl = ...
+
+*arg = SYMBOL | SYMBOL EQUAL value | VARARGS
+
+expr = value
+     | letexpr
+     | defunexpr
+     | applyexpr
+     | lambdaexpr
+     | ifexpr
+*     | raiseexpr
+*     | catchexpr
+*     | methodcall
+
+value = INT
+      | CHAR
+      | STRING
+      | BACKQUOTE SYMBOL
+      | LBRACK {expr} RBRACK
+      | NULL
+      | varexpr
+      | structref
+
+; May eventually become other things, ie namespaces (array indices?)
+varexpr = SYMBOL
+
+applyexpr = LPAREN expr {expr} RPAREN
+
+letexpr = varexpr COLON expr
+
+*defunexpr = [STRING] DEFUN varexpr {arg} COLON {expr} END
+
+lambdaexpr = FUN {arg} COLON {expr} END
+
+ifexpr = IF expr THEN {expr} {ELIF expr THEN {expr}} [ELSE {expr}] END
+
+structref = PERIOD expr PERIOD SYMBOL

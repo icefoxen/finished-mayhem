@@ -1,0 +1,4 @@
+#!/bin/sh
+rm -rf *~
+rm -rf *.o
+rm -rf a.out

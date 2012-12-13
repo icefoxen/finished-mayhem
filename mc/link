@@ -1,0 +1,8 @@
+#!/bin/sh
+
+FILES="havocerr.o havocvm.o havocproc.o havocmain.o"
+
+LINK=gcc
+TARGET=havoc
+
+$LINK -o $TARGET $FILES
